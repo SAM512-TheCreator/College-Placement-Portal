@@ -1,0 +1,10 @@
+# Compiled class files
+out/
+
+# macOS junk
+.DS_Store
+
+# IDE folders
+.idea/
+*.iml
+.vscode/
