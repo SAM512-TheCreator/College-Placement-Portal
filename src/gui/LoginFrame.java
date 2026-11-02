@@ -73,13 +73,13 @@ public class LoginFrame extends JFrame {
         bottom.setOpaque(false);
 
         JButton loginBtn = new JButton("Login");
-        loginBtn.setBackground(new Color(30, 90, 200));
-        loginBtn.setForeground(Color.WHITE);
-        loginBtn.setFocusPainted(false);
         loginBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        loginBtn.setForeground(new Color(20, 40, 120)); // Sharp high-contrast navy text
+        loginBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         JButton registerBtn = new JButton("📝 New Student? Register Here");
         registerBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        registerBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         registerBtn.addActionListener(e -> new RegisterFrame(manager).setVisible(true));
 
         passwordField.addActionListener(e -> handleLogin());
