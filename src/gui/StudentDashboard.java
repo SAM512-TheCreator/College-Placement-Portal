@@ -16,21 +16,26 @@ public class StudentDashboard extends JFrame {
 
     private PlacementManager  manager;
     private Student           student;
+
     private JTable            driveTable;
-    private DefaultTableModel tableModel;
+    private DefaultTableModel driveModel;
     private List<JobDrive>    eligibleDrives;
+
+    private JTable            myAppsTable;
+    private DefaultTableModel myAppsModel;
 
     public StudentDashboard(Student student) {
         this.manager = Main.getManager();
         this.student = student;
 
-        setTitle("Dashboard — " + student.getName());
+        setTitle("Student Dashboard — " + student.getName());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(750, 430);
+        setSize(820, 500);
         setLocationRelativeTo(null);
 
         buildUI();
         loadDrives();
+        loadMyApplications();
     }
 
     private void buildUI() {
@@ -39,62 +44,111 @@ public class StudentDashboard extends JFrame {
         root.setBackground(new Color(245, 248, 255));
         setContentPane(root);
 
+        // Header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+
         JLabel info = new JLabel(
-            "Welcome, " + student.getName()
+            "👤 " + student.getName()
             + "  |  Branch: " + student.getBranch()
             + "  |  CGPA: "   + student.getCgpa()
             + "  |  Backlogs: "+ student.getBacklogs(),
-            SwingConstants.CENTER);
+            SwingConstants.LEFT);
         info.setFont(new Font("SansSerif", Font.BOLD, 14));
         info.setForeground(new Color(30, 60, 120));
-        root.add(info, BorderLayout.NORTH);
+        header.add(info, BorderLayout.WEST);
 
-        String[] columns = {"Company", "Role", "Package (LPA)", "Deadline"};
-        tableModel = new DefaultTableModel(columns, 0) {
+        JButton logoutBtn = new JButton("Logout");
+        logoutBtn.addActionListener(e -> {
+            dispose();
+            new LoginFrame(manager).setVisible(true);
+        });
+        header.add(logoutBtn, BorderLayout.EAST);
+        root.add(header, BorderLayout.NORTH);
+
+        JTabbedPane tabs = new JTabbedPane();
+
+        // ── Tab 1: Available Drives ──────────────────────────────────────────
+        JPanel drivesPanel = new JPanel(new BorderLayout(10, 10));
+
+        driveModel = new DefaultTableModel(new String[]{"Company", "Role", "Package (LPA)", "Deadline"}, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
-
-        driveTable = new JTable(tableModel);
+        driveTable = new JTable(driveModel);
         driveTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         driveTable.setRowHeight(24);
         driveTable.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 13));
-        driveTable.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        drivesPanel.add(new JScrollPane(driveTable), BorderLayout.CENTER);
 
-        JScrollPane scroll = new JScrollPane(driveTable);
-        scroll.setBorder(BorderFactory.createTitledBorder("Eligible Drives"));
-        root.add(scroll, BorderLayout.CENTER);
-
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 8));
-        bottom.setOpaque(false);
-
+        JPanel driveBottom = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 8));
         JButton applyBtn = new JButton("✅ Apply to Selected Drive");
         applyBtn.setFont(new Font("SansSerif", Font.BOLD, 13));
         applyBtn.setBackground(new Color(30, 150, 80));
         applyBtn.setForeground(Color.WHITE);
-        applyBtn.setFocusPainted(false);
         applyBtn.addActionListener(e -> handleApply());
-        bottom.add(applyBtn);
+        driveBottom.add(applyBtn);
 
         JButton refreshBtn = new JButton("🔄 Refresh");
-        refreshBtn.addActionListener(e -> loadDrives());
-        bottom.add(refreshBtn);
+        refreshBtn.addActionListener(e -> {
+            loadDrives();
+            loadMyApplications();
+        });
+        driveBottom.add(refreshBtn);
+        drivesPanel.add(driveBottom, BorderLayout.SOUTH);
 
-        root.add(bottom, BorderLayout.SOUTH);
+        tabs.addTab("🎯 Eligible Job Drives", drivesPanel);
+
+        // ── Tab 2: My Applications ───────────────────────────────────────────
+        JPanel myAppsPanel = new JPanel(new BorderLayout(10, 10));
+
+        myAppsModel = new DefaultTableModel(new String[]{"Company", "Role", "Package", "Status"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        myAppsTable = new JTable(myAppsModel);
+        myAppsTable.setRowHeight(24);
+        myAppsPanel.add(new JScrollPane(myAppsTable), BorderLayout.CENTER);
+
+        JPanel appBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton refreshMyAppsBtn = new JButton("🔄 Refresh Status");
+        refreshMyAppsBtn.addActionListener(e -> loadMyApplications());
+        appBottom.add(refreshMyAppsBtn);
+        myAppsPanel.add(appBottom, BorderLayout.SOUTH);
+
+        tabs.addTab("📋 My Applications & Status", myAppsPanel);
+
+        root.add(tabs, BorderLayout.CENTER);
     }
 
     private void loadDrives() {
         eligibleDrives = manager.getEligibleDrives(student);
-        tableModel.setRowCount(0);
+        driveModel.setRowCount(0);
 
         if (eligibleDrives.isEmpty()) {
-            tableModel.addRow(new Object[]{"—", "No eligible drives found", "—", "—"});
+            driveModel.addRow(new Object[]{"—", "No eligible drives found", "—", "—"});
         } else {
             for (JobDrive d : eligibleDrives) {
-                tableModel.addRow(new Object[]{
+                driveModel.addRow(new Object[]{
                     d.getCompany().getName(),
                     d.getRole(),
                     d.getCtcLpa() + " LPA",
                     d.getDeadline().toString()
+                });
+            }
+        }
+    }
+
+    private void loadMyApplications() {
+        myAppsModel.setRowCount(0);
+        List<Application> apps = manager.getApplicationsForStudent(student);
+        if (apps.isEmpty()) {
+            myAppsModel.addRow(new Object[]{"—", "No applications submitted yet", "—", "—"});
+        } else {
+            for (Application a : apps) {
+                myAppsModel.addRow(new Object[]{
+                        a.getDrive().getCompany().getName(),
+                        a.getDrive().getRole(),
+                        a.getDrive().getCtcLpa() + " LPA",
+                        a.getStatus()
                 });
             }
         }
@@ -117,6 +171,7 @@ public class StudentDashboard extends JFrame {
                 + "\nStatus: " + app.getStatus(),
                 "Success", JOptionPane.INFORMATION_MESSAGE);
             loadDrives();
+            loadMyApplications();
         } catch (NotEligibleException ex) {
             JOptionPane.showMessageDialog(this, "❌ " + ex.getMessage(), "Not Eligible", JOptionPane.ERROR_MESSAGE);
         } catch (DuplicateApplicationException ex) {

@@ -8,6 +8,6 @@ public class Admin extends User {
 
     @Override
     public void showDashboard() {
-        new gui.SimpleDashboard(getName(), "Admin").setVisible(true);
+        new gui.AdminDashboard(this).setVisible(true);
     }
 }

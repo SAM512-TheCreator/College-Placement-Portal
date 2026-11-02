@@ -12,7 +12,7 @@ public class Recruiter extends User {
 
     @Override
     public void showDashboard() {
-        new gui.SimpleDashboard(getName(), "Recruiter @ " + companyName).setVisible(true);
+        new gui.RecruiterDashboard(this).setVisible(true);
     }
 
     public String getCompanyName() { return companyName; }

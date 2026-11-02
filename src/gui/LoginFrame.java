@@ -17,7 +17,7 @@ public class LoginFrame extends JFrame {
         this.manager = manager;
         setTitle("Placement Portal — Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(420, 280);
+        setSize(440, 340);
         setLocationRelativeTo(null);
         setResizable(false);
         buildUI();
@@ -25,14 +25,28 @@ public class LoginFrame extends JFrame {
 
     private void buildUI() {
         JPanel outer = new JPanel(new BorderLayout(10, 10));
-        outer.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        outer.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 25));
         outer.setBackground(new Color(245, 248, 255));
         setContentPane(outer);
+
+        // Header with title and database mode badge
+        JPanel header = new JPanel(new GridLayout(2, 1, 4, 4));
+        header.setOpaque(false);
 
         JLabel title = new JLabel("🎓 Placement Portal", SwingConstants.CENTER);
         title.setFont(new Font("SansSerif", Font.BOLD, 22));
         title.setForeground(new Color(30, 60, 120));
-        outer.add(title, BorderLayout.NORTH);
+        header.add(title);
+
+        String dbStatusText = manager.isUsingDatabase() 
+                ? "● Database: MySQL Connected (JDBC Active)" 
+                : "○ Database: In-Memory Mock (Start MySQL to persist)";
+        JLabel dbBadge = new JLabel(dbStatusText, SwingConstants.CENTER);
+        dbBadge.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        dbBadge.setForeground(manager.isUsingDatabase() ? new Color(20, 120, 50) : new Color(150, 100, 20));
+        header.add(dbBadge);
+
+        outer.add(header, BorderLayout.NORTH);
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
@@ -54,16 +68,27 @@ public class LoginFrame extends JFrame {
 
         outer.add(form, BorderLayout.CENTER);
 
+        // Buttons section: Login + Register
+        JPanel bottom = new JPanel(new GridLayout(2, 1, 8, 8));
+        bottom.setOpaque(false);
+
         JButton loginBtn = new JButton("Login");
         loginBtn.setBackground(new Color(30, 90, 200));
         loginBtn.setForeground(Color.WHITE);
         loginBtn.setFocusPainted(false);
         loginBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
 
+        JButton registerBtn = new JButton("📝 New Student? Register Here");
+        registerBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        registerBtn.addActionListener(e -> new RegisterFrame(manager).setVisible(true));
+
         passwordField.addActionListener(e -> handleLogin());
         loginBtn.addActionListener(e -> handleLogin());
 
-        outer.add(loginBtn, BorderLayout.SOUTH);
+        bottom.add(loginBtn);
+        bottom.add(registerBtn);
+
+        outer.add(bottom, BorderLayout.SOUTH);
     }
 
     private void handleLogin() {
